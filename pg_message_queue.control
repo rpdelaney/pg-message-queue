@@ -1,0 +1,4 @@
+# pg_message_queue extension
+comment = 'A Listen/Notify-based message queue extension'
+default_version = '0.2.1'
+relocatable = true

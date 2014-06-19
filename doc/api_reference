@@ -1,0 +1,110 @@
+API Reference for pg_message_queue Extension 
+
+0.1, 2012
+
+CONTENTS
+========
+
+1. Catalogs
+2. Queue Table Structure
+3. Functional Interface
+
+1: CATALOGS
+============
+
+pg_message_queue contains one and only one catalog, pg_mq_config_catalog.  This
+catalog contains the following columns:
+
+    table_name   name not null unique
+    channel      name          primary key
+    payload_type text not null
+
+table_name is the name (in the installed schema) where the table is installed.
+When created by the functions included (see below), the table is named
+pg_mq_queue_[channel] where [channel] is specified as an argument to the
+function.  [channel] would also be the default value for the channel name.
+
+The payload_type is currently restricted to one of 'bytea', 'test', or 'xml'.
+This may change to use an oid reference at some point if we start supporting a
+lot of other data types.
+
+
+2: QUEUE TABLE STRUCTURE
+========================
+
+Each queue table has the following structure:
+
+ msg_id         bigint                      | -- serial
+ sent_at        timestamp without time zone | not null default now()
+ sent_by        name                        | not null default "session_user"()
+ delivered_at   timestamp without time zone | -- default null
+ payload        variable (see below)  
+
+The msg_id is a bigint, and all queues share the same sequence.  The rest of the
+fields are fairly self-explanatory.  if you want to override values here you can
+do this.  Note that the actual queue tables are properly backed up and restored
+by pg_dump and therefore the full schema changes will make it into your backups.
+If you want to change sent_by to be the server PID or '*****' or whatever, you
+can do this.
+
+Payload has a variable type.  Currently the options are text, xml, and bytea,
+with plans to support json at some point when we decide to bump up the required
+version to 9.2.
+
+Future versions may support arbitrary types.
+
+3: FUNCTIONAL INTERFACE
+=======================
+
+The functional interface follows the Service Oriented Database Architecture
+pioneered in LedgerSMB.  This allows applications to map in object properites to
+stored procedure interfaces while, at the same time, allowing queries to be
+written in reasonably human readable form.  See notes below regarding
+integratind SODA type applications with these functions.
+
+To prevent collisions between argument names and column names, all argument
+names are prefixed with "in_."
+
+Queue Management Functions
+-----------------------------
+
+Queue objects follow the structure of pg_mq_config_catalog (see section 1 above)
+
+These functions create and drop queues, following the conventions described
+above.
+
+* pg_mq_create_queue(in_channel text, in_payload_type text)
+
+* pg_mq_drop_queue(in_channel text)
+
+A final function, pg_mq_rebuild_triggers should be run after restoring a backup,
+to ensure that notification triggers are built on all queue tables.
+
+* pg_mq_rebuild_triggers()
+
+Message Management Functions
+-----------------------------
+
+Message management classes have a structure similar to the queue tables above.
+In addition in_num_msgs is expected to be application-supplied and refers to
+the number of queued messages awaiting delivery to be sent to the process.
+
+* pg_mq_send_message(in_channel text, in_payload anyelement)
+
+Note the payload type must match the payload_type of the queue.
+
+* pg_mq_get_msg_text(in_channel name, in_num_msgs int)
+
+This works on all queue types but bytea, in which case an error is returned.
+
+* pg_mq_get_msg_bin(in_channel name, in_num_msgs int)
+
+This works on all queue types.
+
+The same type rules apply to the items below too, which retrieve a single
+message by msg_id.
+
+* pg_mq_get_msg_id_text(in_channel name, in_msg_id int)
+
+* pg_mq_get_msg_id_text(in_channel name, in_msg_id int)
+

@@ -1,0 +1,24 @@
+INSTALLATION
+------------
+
+To install the extension so that PostgreSQL can find it:
+
+make install
+
+If you are using Linux with distro-supplied packages you may need to install 
+the development packages.  Installations from source should be sufficient.
+
+Then in psql, pgAdmin, or the like, run the following SQL query:
+
+CREATE EXTENSION pg_message_queue;
+
+If you would like to install an earlier version of pg_message_queue:
+
+CREATE EXTENSION pg_message_queue VERSION '0.1';
+
+UPGRADING FROM 0.1
+--------------------
+
+To upgrade from pg_message_queue 0.1:
+
+CREATE EXTENSION pg_message_queue FROM VERSION '0.1';

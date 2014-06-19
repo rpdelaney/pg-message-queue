@@ -1,0 +1,85 @@
+Architecture for pg_message_queue
+
+0.1, 2012
+
+INTRODUCTION
+================
+
+The pg_message_queue extension is a simple message queue extension for 
+asynchronously sending messages for later processing on database commit.  The
+goal of this project is to provide a simple, standard  interface for such tasks
+and thus simplify integration work across the board.
+
+This extension is build entirely on PostgreSQL-distributed features.  It will
+run anywhere PostgreSQL can run.   In this regard it is rather different than
+the skytools pgq implementation.  These systems are different and have different
+use cases.
+
+Additionally this has been designed to be flexible, and to support multiple
+modes of effort operation.  This allows architectures to change as requirements
+change without too much disruption.
+
+ARCHITECTURE
+================
+
+The pg_message_queue extension consistes of a number of base/abstract tables, a
+catalog, and some functions.  The base tables are used because table inheritance
+allows for a single point of maintenance going forward regarding table
+structure.  Note that these tables should not be altered outside extension
+updates because this will break the functions that send/receive queues.
+
+The base/abstract tables currently allow for payloads to be written in text,
+bytea, or xml types.  They can be retrieved in bytea or text representations.
+All queues can be retrieved with the payload cast to bytea.  Everything except
+bytea can be cast to text.  The application is assumed to know what to do with
+the message payload.
+
+The catalog, pg_mq_config_catalog has its data backed up during normal backups,
+and the actual queue tables are backed up entirely (schema and data).  This is
+because we create a single table per queue.  These tables could be read from and
+written to by normal processes, and the functions which access them do so using
+the user's security writes, so normal PostgreSQL security rules apply. Security
+is provided by the underlying table security rules of PostgreSQL.
+
+When a channel is created a table with the name of pg_mq_[channel] is created,
+and notifications are raised to [channel] with a payload of the msg_id field of
+the queue table.  Processes can then request that they receive a message by
+msg_id, or the next n undelivered messages in the queue.
+
+INTENDED APPLICATIONS
+=====================
+
+pg_message_queue is intended to be a very simple extension, standardizing what
+people are doing with LISTEN/NOTIFY already and thus streamlining integration
+work in this area.  Additional extensions could be built further clarifying what
+sorts of information could be queued and this could be the basis of further
+streamlined integration work.  While pg_message_queue is not intended to replace
+dedicated middleware message queues in all roles, it can be used to generate
+messages to be sent into them, and for roles where dedicated message queues are
+not worth the complexity.  Such tasks might include:
+
+ * Sending email/sms/im on database events (your order has shipped!)
+ * Integration with other software programs
+ * Logs of events which must be processed only after commit.
+
+One can have listeners which listen for notifications, and request next n unsent
+messages, listeners which listen for notifications and request each message sent
+during the listening time, scripts that wake up every night to check the queue,
+etc. in any combination.  The behavior is intended to be understandable and
+predictable, and the software offers a few very basic transactional guarantees:
+
+ * If a message is delivered anywhere it is deemed "delivered"
+ * A message is deemed delivered when the delivering transaction commits
+ * Message delivery transactions are blocking
+ * Message delivery transactions can be rolled back
+ * Messages are recoverable and retrievable by id until
+   deleted (outside the scope of this extension).
+
+For the above reasons, the approach here is not really given to high concurrency
+delivery off the same queue.  In this case, send to a dedicated message queue
+server.  On the lower end, however, the model should work quite well.
+
+The architecture is designed to be fully transactional and to move from one
+internally consistent state to another.  A listener who cannot process a given
+message is expected to roll back the transaction so that the message is not
+marked as processed.

@@ -1,0 +1,49 @@
+Security for the pg_message_queue Extension
+
+0.1, 2012
+
+The basic LISTEN/NOTIFY framework of PostgreSQL provides no security.  Anyone 
+can LISTEN and anyone can NOTIFY on any channel.  For this reason some level of
+understanding of the limits of the PostgreSQL security model are important for
+pg_message_queue to be used securely.
+
+SENDING MESSAGES
+================
+
+Sending messages requires permission to insert into the queue table (these are
+typically named pg_mq_queue_[channel]). A NOTIFY with the msg_id is raised on
+insert.
+
+RECEIVING MESSAGES
+==================
+
+Receiving messages poses additional security concerns, but these are not
+currently believed to be uniquely severe.  Additionally many of the possible
+problems are sufficiently generic in nature that it is hard to know where
+security begins and bugs end.
+
+In general receiving by broadcast is susceptible to replay for a number of
+reasons.  First, anyone can listen on a channel, and re-issue a notification
+with the same payload later.  Since the message can be retrieved again, it could
+be processed again.  Countermeasures are certainly possible but they must be
+implemented on the listener side.
+
+Beyond this, however, it is hard to be sure that there are not duplicate
+listeners, and so the problems with security are not limited to security.  The
+best countermeasures are thus ones that avoid the problem altogether.  In
+general, a listener retrieving a message via broadcast (by msg_id) should never
+engauge in non-idempotent operations based on te content of that message.  It
+should also roll back the receipt transaction UNLESS no non-broadcast users are
+likely to be listening in the future.  This ensures that non-idempotent
+operations can still be received.
+
+In the future we may change the guarantees to refuse to mark a message as
+delivered when it is requested by id.
+
+Listeners must have UPDATE privileges on the underlying tables.
+
+FUTURE WORK
+============
+
+In the future, it is likely that underlying tools will be used to purge queues
+of old messages, and look into security models for broadcast messages.

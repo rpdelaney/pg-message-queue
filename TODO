@@ -1,0 +1,6 @@
+TODO items
+
+* Code
+   * Add delivery logs
+   * Allow configuration for raising NOTICEs on delivery, for other logging
+   * Add role management

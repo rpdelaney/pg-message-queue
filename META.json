@@ -1,0 +1,50 @@
+{
+   "name": "pg_message_queue",
+   "abstract": "A simple LISTEN/NOTIFY message queue with payload tables",
+   "description": "pg_message_queue is a simple light-weight way of attaching message queues to PostgreSQL for handling actions on data events, and passing those on to other processes.  This version supports LISTEN/NOTIFY, polling, and other methods for getting/receiving messages.",
+   "version": "0.2.1",
+   "maintainer": [
+      "Chris Travers <chris@metatrontech.com>"
+   ],
+   "license": {
+      "PostgreSQL": "http://www.postgresql.org/about/licence"
+   },
+   "prereqs": {
+      "runtime": {
+         "requires": {
+            "plpgsql": 0,
+            "PostgreSQL": "9.1.0"
+         }
+      }
+   },
+   "provides": {
+     "pg_message_queue": {
+       "file": "pg_message_queue--0.2.1.sql",
+       "docfile": "doc/api_reference",
+       "version": "0.2.0",
+       "abstract": "Message queue for PostgreSQL"
+     }
+   },
+   "resources": {
+      "bugtracker": {
+         "web": "http://code.google.com/p/pg-message-queue/issues/list"
+      },
+      "repository": {
+        "url":  "https://pg-message-queue.googlecode.com/svn/trunk/",
+        "web":  "http://code.google.com/p/pg-message-queue/source/checkout",
+        "type": "svn"
+      }
+   },
+   "generated_by": "Chris Travers",
+   "meta-spec": {
+      "version": "1.0.0",
+      "url": "http://pgxn.org/meta/spec.txt"
+   },
+   "tags": [
+      "administration",
+      "maintenance",
+      "automation",
+      "notify",
+      "messaging"
+   ]
+}

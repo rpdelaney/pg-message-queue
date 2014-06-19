@@ -1,0 +1,8 @@
+0.3:
+--------------
+Handle unknown queues with exceptions in functions
+Add functions to manage role grants to underlying tables
+
+0.4:
+--------------
+tbd
