@@ -9,7 +9,7 @@ Applications include:
  * Sending messages to other systems (perhaps a gateway to RabbitMQ or the
    like?)
 
-##INSTALLATION
+##Installation
 To install the extension so that PostgreSQL can find it:
 
 ```sh
@@ -25,7 +25,7 @@ Then in psql, pgAdmin, or the like, run the following SQL query:
 CREATE EXTENSION pg_message_queue;
 ```
 
-##USAGE
+##Usage
 This extension is based on the idea of channels.  Each channel is a queue.
 Messages are sent to the queue and expected to be delivered at some later time.
 There is no guarantee or expectation that messages will be immediately
@@ -36,7 +36,7 @@ The internal implementation is handled in ``pg_mq_config_catalog``.  This stores
 physical location of the queue tables, channels, etc.  By default, the tables
 are named ``pg_mq_queue_[channel]`` so that conflicts of names are not an issue.
 
-##Creating a Queue:
+##Creating a queue
 To create a queue, use the function:
 
 ```sql
@@ -66,7 +66,7 @@ the option of greater interactivity between components, if you need it.
 
 You can then manage permissions on the underlying tables.
 
-##Sending Messages:
+##Sending messages
 Sending messages to the queue is done using the function:
 
 ```sql
@@ -79,7 +79,7 @@ Example:
 SELECT * FROM pg_mq_send_message('test_queue', 'Read This'::text);
 ```
 
-##Retrieving Message:
+##Retrieving messages
 This then allows you to retrieve it using one of the following two functions:
 
 ```sql
